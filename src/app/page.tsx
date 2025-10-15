@@ -1,103 +1,224 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import Header from "./components/Header";
+import NavigationTabs from "./components/NavigationTabs";
+import SearchBar from "./components/SearchBar";
+import PieceCard from "./components/PieceCard";
+
+interface PieceData {
+  id: string;
+  article: string;
+  color: string;
+  measure: string;
+  originalData?: unknown;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<"CLADD" | "IMPORTADO">("CLADD");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [pieces, setPieces] = useState<PieceData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [importadoDataLoaded, setImportadoDataLoaded] = useState(false);
+  const [importadoLoading, setImportadoLoading] = useState(true);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const searchPiece = async (nroSerie: string) => {
+    if (!nroSerie.trim()) {
+      setError("Por favor ingrese un número de serie");
+      return;
+    }
+
+    // Check if piece already exists in the list
+    const existingPiece = pieces.find((piece) => piece.id === nroSerie);
+    if (existingPiece) {
+      setError("Esta pieza ya está en la lista");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (activeTab === "CLADD") {
+        const response = await fetch(
+          `/api/cladd/pieza?nroSerie=${encodeURIComponent(nroSerie)}`
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError("Pieza no encontrada");
+          } else {
+            setError("Error al buscar la pieza");
+          }
+          return;
+        }
+
+        const data = await response.json();
+        // Add to the existing list instead of replacing
+        setPieces((prevPieces) => [...prevPieces, data]);
+        setSearchTerm(""); // Clear search input after successful search
+      } else {
+        // Check if IMPORTADO data is loaded
+        if (!importadoDataLoaded) {
+          setError("Cargando datos IMPORTADO, por favor espere...");
+          return;
+        }
+
+        // IMPORTADO local search (using cached data)
+        const response = await fetch(
+          `/api/importado/pieza?codigoCompleto=${encodeURIComponent(nroSerie)}`
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError("Pieza no encontrada");
+          } else {
+            setError("Error al buscar la pieza");
+          }
+          return;
+        }
+
+        const data = await response.json();
+        // Add to the existing list instead of replacing
+        setPieces((prevPieces) => [...prevPieces, data]);
+        setSearchTerm(""); // Clear search input after successful search
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      setError("Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      searchPiece(searchTerm);
+    }
+  };
+
+  // Load IMPORTADO data on app start
+  useEffect(() => {
+    const loadImportadoData = async () => {
+      try {
+        setImportadoLoading(true);
+        // Trigger the loading by calling the /all endpoint
+        const response = await fetch("/api/importado/all");
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`IMPORTADO data loaded: ${result.count} pieces`);
+          console.log(
+            `EJEMPLO DE NUMERO DE PIEZA: ${result.data[41].NumeroPieza}`
+          );
+          setImportadoDataLoaded(true);
+        } else {
+          console.error("Failed to load IMPORTADO data");
+        }
+      } catch (error) {
+        console.error("Error loading IMPORTADO data:", error);
+      } finally {
+        setImportadoLoading(false);
+      }
+    };
+
+    loadImportadoData();
+  }, []);
+
+  const handleDeletePiece = (id: string) => {
+    console.log("Delete piece:", id);
+    setPieces(pieces.filter((piece) => piece.id !== id));
+  };
+
+  const handlePrintPiece = (piece: PieceData) => {
+    console.log("Print piece:", piece);
+    // TODO: Implement print functionality
+    window.print();
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA]">
+      <Header />
+      <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="max-w-md mx-auto px-4 py-6">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          onKeyPress={handleKeyPress}
+          placeholder={
+            activeTab === "CLADD"
+              ? "Buscar pieza CLADD (presione Enter)"
+              : importadoLoading
+              ? "Cargando datos IMPORTADO..."
+              : "Buscar pieza IMPORTADO (presione Enter)"
+          }
+        />
+
+        {/* IMPORTADO Data Loading Status */}
+        {activeTab === "IMPORTADO" && importadoLoading && (
+          <div className="mt-2 text-center text-sm text-[#C19E5A]">
+            Cargando datos IMPORTADO desde la base de datos...
+          </div>
+        )}
+
+        {activeTab === "IMPORTADO" &&
+          importadoDataLoaded &&
+          !importadoLoading && (
+            <div className="mt-2 text-center text-sm text-green-600">
+              ✓ Datos IMPORTADO cargados y listos
+            </div>
+          )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-4 text-center text-[#4A4A4A]">
+            Buscando pieza...
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="mt-4 text-center text-red-600 bg-red-50 p-3 rounded-md">
+            {error}
+          </div>
+        )}
+
+        {/* Results */}
+        <div className="mt-4">
+          <div className="max-h-[420px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {pieces
+              .slice()
+              .reverse() // Show newest first (most recently added at the top)
+              .map((piece) => (
+                <PieceCard
+                  key={piece.id}
+                  id={piece.id}
+                  article={piece.article}
+                  color={piece.color}
+                  measure={piece.measure}
+                  onDelete={() => handleDeletePiece(piece.id)}
+                  onPrint={() => handlePrintPiece(piece)}
+                />
+              ))}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Empty State */}
+        {!loading && !error && pieces.length === 0 && (
+          <div className="mt-4 text-center text-[#4A4A4A]">
+            {searchTerm
+              ? "No se encontraron piezas"
+              : "Ingrese un número de serie y presione Enter"}
+          </div>
+        )}
+
+        {/* List Info */}
+        {pieces.length > 0 && (
+          <div className="mt-4 text-center text-sm text-[#4A4A4A]">
+            {pieces.length} pieza{pieces.length !== 1 ? "s" : ""} en la lista
+          </div>
+        )}
+      </div>
     </div>
   );
 }

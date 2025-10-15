@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors */
+  --corporate-blue: #1a2753;
+  --corporate-gold: #c19e5a;
+  --background: #f8f9fa;
+  --primary-text: #1a1a1a;
+  --secondary-text: #4a4a4a;
+  --borders: #e4e7eb;
+  --hover-border: #c19e5a;
+  --disabled-text: #b0b0b0;
 }
 
 @theme inline {
+  /* Brand Colors */
+  --color-corporate-blue: var(--corporate-blue);
+  --color-corporate-gold: var(--corporate-gold);
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-primary-text: var(--primary-text);
+  --color-secondary-text: var(--secondary-text);
+  --color-borders: var(--borders);
+  --color-hover-border: var(--hover-border);
+  --color-disabled-text: var(--disabled-text);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Typography */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
+
+  /* Spacing */
+  --spacing-card-padding: 16px;
+  --spacing-card-margin: 12px;
+  --spacing-search-padding: 12px 16px;
+  --spacing-tab-padding: 12px 24px;
+
+  /* Border Radius */
+  --radius-card: 8px;
+  --radius-search: 6px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-search: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 body {
   background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--primary-text);
+  font-family: var(--font-inter), Inter, Roboto, "Open Sans", sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
 }
