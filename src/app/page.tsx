@@ -12,6 +12,7 @@ interface PieceData {
   color: string;
   measure: string;
   originalData?: unknown;
+  source: "CLADD" | "IMPORTADO";
 }
 
 export default function Home() {
@@ -22,6 +23,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [importadoDataLoaded, setImportadoDataLoaded] = useState(false);
   const [importadoLoading, setImportadoLoading] = useState(true);
+  const [savingPieces, setSavingPieces] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const searchPiece = async (nroSerie: string) => {
     if (!nroSerie.trim()) {
@@ -38,6 +42,8 @@ export default function Home() {
 
     setLoading(true);
     setError(null);
+    setSaveMessage(null);
+    setSaveError(null);
 
     try {
       if (activeTab === "CLADD") {
@@ -54,7 +60,7 @@ export default function Home() {
           return;
         }
 
-        const data = await response.json();
+        const data: PieceData = await response.json();
         // Add to the existing list instead of replacing
         setPieces((prevPieces) => [...prevPieces, data]);
         setSearchTerm(""); // Clear search input after successful search
@@ -79,7 +85,7 @@ export default function Home() {
           return;
         }
 
-        const data = await response.json();
+        const data: PieceData = await response.json();
         // Add to the existing list instead of replacing
         setPieces((prevPieces) => [...prevPieces, data]);
         setSearchTerm(""); // Clear search input after successful search
@@ -127,13 +133,52 @@ export default function Home() {
 
   const handleDeletePiece = (id: string) => {
     console.log("Delete piece:", id);
-    setPieces(pieces.filter((piece) => piece.id !== id));
+    setPieces((prevPieces) => prevPieces.filter((piece) => piece.id !== id));
   };
 
   const handlePrintPiece = (piece: PieceData) => {
     console.log("Print piece:", piece);
     // TODO: Implement print functionality
     window.print();
+  };
+
+  const handleSavePieces = async () => {
+    if (pieces.length === 0 || savingPieces) {
+      return;
+    }
+
+    setSavingPieces(true);
+    setSaveError(null);
+    setSaveMessage(null);
+
+    try {
+      const response = await fetch("/api/pieces", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pieces }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.error || "Error al guardar las piezas");
+      }
+
+      const result = await response.json();
+      setSaveMessage(
+        `Se guardaron ${result.count} pieza${
+          result.count === 1 ? "" : "s"
+        } correctamente.`
+      );
+    } catch (err) {
+      console.error("Save pieces error:", err);
+      setSaveError(
+        err instanceof Error ? err.message : "Error al guardar las piezas"
+      );
+    } finally {
+      setSavingPieces(false);
+    }
   };
 
   return (
@@ -216,6 +261,35 @@ export default function Home() {
         {pieces.length > 0 && (
           <div className="mt-4 text-center text-sm text-[#4A4A4A]">
             {pieces.length} pieza{pieces.length !== 1 ? "s" : ""} en la lista
+          </div>
+        )}
+
+        {/* Save Button */}
+        {pieces.length > 0 && (
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <button
+              onClick={handleSavePieces}
+              disabled={savingPieces}
+              className={`w-full max-w-xs rounded-lg bg-[#1A2753] px-4 py-2 text-white transition-colors ${
+                savingPieces ? "opacity-70" : "hover:bg-[#C19E5A]"
+              }`}
+            >
+              {savingPieces
+                ? "Guardando piezas..."
+                : "Guardar piezas y preparar acciones"}
+            </button>
+
+            {saveMessage && (
+              <div className="w-full max-w-xs rounded-md bg-green-50 px-3 py-2 text-center text-sm text-green-600">
+                {saveMessage}
+              </div>
+            )}
+
+            {saveError && (
+              <div className="w-full max-w-xs rounded-md bg-red-50 px-3 py-2 text-center text-sm text-red-600">
+                {saveError}
+              </div>
+            )}
           </div>
         )}
       </div>

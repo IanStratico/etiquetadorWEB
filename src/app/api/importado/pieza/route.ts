@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
         peso: peso,
         codigoCompleto: codigoCompleto,
       },
+      source: "IMPORTADO" as const,
     };
 
     return NextResponse.json(transformedData);

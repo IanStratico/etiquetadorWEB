@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
       article: `Artículo: ${data.descripcionArticulo}`,
       color: `Color: ${data.descripcionColor}`,
       measure: `Medida: ${data.peso} kg`,
-      originalData: data // Keep original data for reference
+      originalData: data, // Keep original data for reference
+      source: "CLADD" as const,
     };
 
     return NextResponse.json(transformedData);
