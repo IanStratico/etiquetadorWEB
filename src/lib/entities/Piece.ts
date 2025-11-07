@@ -3,9 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
+import { Lot } from "@/lib/entities/Lot";
 
 export type PieceSource = "CLADD" | "IMPORTADO";
 
@@ -23,6 +26,9 @@ export class Piece {
   @Column({ type: "text" })
   article!: string;
 
+  @Column({ name: "cod_articulo", type: "varchar", length: 100 })
+  codArticulo!: string;
+
   @Column({ type: "text" })
   color!: string;
 
@@ -31,6 +37,13 @@ export class Piece {
 
   @Column({ type: "json", nullable: true })
   data!: unknown;
+
+  @ManyToOne(() => Lot, (lot) => lot.pieces, {
+    nullable: false,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "lot_id" })
+  lot!: Lot;
 
   @CreateDateColumn({ name: "created_date" })
   createdDate!: Date;

@@ -59,9 +59,10 @@ export async function GET(request: NextRequest) {
     // Transform the response to match our UI format
     const transformedData = {
       id: codigoCompleto, // Use the complete code as ID
-      article: `Artículo: ${foundPiece.NombreArticulo}`,
-      color: `Color: ${foundPiece.ColorPorArticulo}`,
-      measure: `Medida: ${peso} kg`,
+      article: `${foundPiece.NombreArticulo}`,
+      codArticulo: `${foundPiece.NumeroArticulo ?? ""}`,
+      color: `${foundPiece.ColorPorArticulo}`,
+      measure: `${peso}`,
       originalData: {
         ...foundPiece,
         peso: peso,

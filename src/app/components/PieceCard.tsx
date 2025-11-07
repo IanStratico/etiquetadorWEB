@@ -1,6 +1,7 @@
 interface PieceCardProps {
   id: string;
   article: string;
+  codArticulo?: string;
   color: string;
   measure: string;
   onDelete: () => void;
@@ -12,6 +13,7 @@ interface PieceCardProps {
 export default function PieceCard({
   id,
   article,
+  codArticulo,
   color,
   measure,
   onDelete,
@@ -38,7 +40,7 @@ export default function PieceCard({
     >
       {/* Action Buttons */}
       <div className="absolute top-4 right-4 flex gap-2">
-        {/* Print Button */}
+        {/* Print Button
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -62,7 +64,7 @@ export default function PieceCard({
             <path d="M6,18H4a2,2 0 0,1 -2,-2V11a2,2 0 0,1 2,-2H20a2,2 0 0,1 2,2v5a2,2 0 0,1 -2,2H18"></path>
             <rect x="6" y="14" width="12" height="8"></rect>
           </svg>
-        </button>
+        </button> */}
 
         {/* Delete Button */}
         <button
@@ -97,9 +99,14 @@ export default function PieceCard({
 
       {/* Piece Details */}
       <div className="space-y-1">
-        <div className="text-[#4A4A4A] text-sm">{article}</div>
-        <div className="text-[#4A4A4A] text-sm">{color}</div>
-        <div className="text-[#4A4A4A] text-sm">{measure}</div>
+        {codArticulo && (
+          <div className="text-[#4A4A4A] text-sm">
+            Código artículo: {codArticulo}
+          </div>
+        )}
+        <div className="text-[#4A4A4A] text-sm">Articulo: {article}</div>
+        <div className="text-[#4A4A4A] text-sm">Color: {color}</div>
+        <div className="text-[#4A4A4A] text-sm">Medida: {measure}</div>
       </div>
     </div>
   );

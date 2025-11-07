@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { DataSource } from "typeorm";
 import { Piece } from "@/lib/entities/Piece";
+import { Lot } from "@/lib/entities/Lot";
 
 const globalForTypeOrm = globalThis as unknown as {
   __typeormDataSource?: DataSource;
@@ -29,7 +30,7 @@ const dataSource =
     database,
     synchronize: true,
     logging: false,
-    entities: [Piece],
+    entities: [Lot, Piece],
   });
 
 if (!globalForTypeOrm.__typeormDataSource) {
