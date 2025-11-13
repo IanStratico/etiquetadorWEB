@@ -31,7 +31,8 @@ export async function GET() {
               articulos.BASE as NumeroArticulo,
               articulos2.DESCRIPCIO as NombreArticulo,
               precios.PRECIO as PrecioArticulo,
-              carpetas.DESCRIP as TipoArticulo
+              carpetas.DESCRIP as TipoArticulo,
+              articulos.CAMPOS_ADICIONALES.value('(/CAMPOS_ADICIONALES/CA_ID_COLOR_WEB)[1]', 'VARCHAR(MAX)') as codigoColorWeb
       FROM STA11 articulos
       JOIN LA_NUEVA_TEXTIL.dbo.STA11ITC articulosxcarpeta
           ON articulos.COD_ARTICU = articulosxcarpeta.CODE

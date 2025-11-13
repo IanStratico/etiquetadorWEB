@@ -14,6 +14,7 @@ interface IncomingPiece {
   codArticulo: string;
   color: string;
   measure: string;
+  idColorWeb: string;
   source: PieceSource;
   originalData?: unknown;
 }
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
         codArticulo: piece.codArticulo.padStart(5, "0"),
         color: piece.color,
         measure: piece.measure,
+        idColorWeb: piece.idColorWeb,
         data: piece.originalData ?? null,
         lot: savedLot!,
       })

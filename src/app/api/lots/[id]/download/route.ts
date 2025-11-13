@@ -41,7 +41,7 @@ export async function GET(
       ["Cód. artículo", "Id Color", "Color", "ID interno", "Medida"],
       ...lot.pieces.map((piece) => [
         piece.codArticulo,
-        "1234", // Placeholder for Id Color
+        piece.idColorWeb, // Placeholder for Id Color
         piece.color,
         piece.id,
         piece.measure,

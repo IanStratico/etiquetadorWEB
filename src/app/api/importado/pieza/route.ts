@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
       codArticulo: `${foundPiece.NumeroArticulo ?? ""}`,
       color: `${foundPiece.ColorPorArticulo}`,
       measure: `${peso}`,
+      idColorWeb: `${foundPiece.codigoColorWeb}`,
       originalData: {
         ...foundPiece,
         peso: peso,

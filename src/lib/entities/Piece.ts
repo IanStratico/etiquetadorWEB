@@ -35,6 +35,9 @@ export class Piece {
   @Column({ type: "text" })
   measure!: string;
 
+  @Column({ name: "color_web_id", type: "text" })
+  idColorWeb!: string;
+
   @Column({ type: "json", nullable: true })
   data!: unknown;
 

@@ -13,8 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Make request to CLADD API
-    const claddApiUrl = `http://192.168.1.32:8010/api/piezasCladd/piezaPorNroSerie?nroSerie=${nroSerie}`;
-
+    const claddApiUrl = `http://192.168.1.32:8010/api/piezasLNT/piezaPorNroSerie?nroSerie=${nroSerie}`;
     const response = await fetch(claddApiUrl, {
       method: "GET",
       headers: {
@@ -24,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: "Failed to fetch from CLADD API" },
+        { error: "Failed to fetch from LNT API" },
         { status: response.status }
       );
     }
@@ -35,9 +34,10 @@ export async function GET(request: NextRequest) {
     const transformedData = {
       id: data.nroSerie,
       article: `${data.descripcionArticulo}`,
-      codArticulo: `${data.codArticulo ?? ""}`,
+      codArticulo: `${data.codArticulo}`,
       color: `${data.descripcionColor}`,
-      measure: `${data.peso}`,
+      measure: `${data.valorUMedida}`,
+      idColorWeb: `${data.idColorWeb}`,
       originalData: data, // Keep original data for reference
       source: "CLADD" as const,
     };
