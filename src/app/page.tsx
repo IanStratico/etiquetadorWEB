@@ -95,7 +95,7 @@ export default function Home() {
             return [detail.lot, ...prevLots];
           }
           return prevLots.map((lot) =>
-            lot.id === detail.lot.id ? { ...lot, ...detail.lot } : lot
+            lot.id === detail.lot.id ? { ...lot, ...detail.lot } : lot,
           );
         });
       } catch (fetchError) {
@@ -108,13 +108,13 @@ export default function Home() {
         setSelectedLotError(
           fetchError instanceof Error
             ? fetchError.message
-            : "Error al cargar el lote"
+            : "Error al cargar el lote",
         );
       } finally {
         setSelectedLotLoading(false);
       }
     },
-    []
+    [],
   );
 
   const loadLots = useCallback(async (signal?: AbortSignal) => {
@@ -157,7 +157,7 @@ export default function Home() {
       setLotsError(
         loadError instanceof Error
           ? loadError.message
-          : "Error al cargar los lotes"
+          : "Error al cargar los lotes",
       );
     } finally {
       if (!signal?.aborted) {
@@ -233,7 +233,7 @@ export default function Home() {
       if (!response.ok) {
         const errorBody = await response.json().catch(() => null);
         throw new Error(
-          errorBody?.error || "Error al descargar el archivo del lote"
+          errorBody?.error || "Error al descargar el archivo del lote",
         );
       }
 
@@ -256,7 +256,7 @@ export default function Home() {
       setSelectedLotError(
         downloadError instanceof Error
           ? downloadError.message
-          : "Error al descargar el lote"
+          : "Error al descargar el lote",
       );
     } finally {
       setLotDownloadLoading(false);
@@ -277,7 +277,10 @@ export default function Home() {
 
     if (activeTab === "CLADD") {
       const existingPiece = pieces.find(
-        (piece) => piece.source === "CLADD" && piece.id === nroSerie
+        (piece) =>
+          piece.source === "CLADD" &&
+          piece.id ===
+            nroSerie.replace(/\s+/g, "").replace(/^0+/, "").padStart(9, "0"),
       );
       if (existingPiece) {
         setError("Esta pieza ya está en la lista");
@@ -293,7 +296,9 @@ export default function Home() {
     try {
       if (activeTab === "CLADD") {
         const response = await fetch(
-          `/api/cladd/pieza?nroSerie=${encodeURIComponent(nroSerie)}`
+          `/api/cladd/pieza?nroSerie=${encodeURIComponent(
+            nroSerie.replace(/\s+/g, "").replace(/^0+/, "").padStart(9, "0"),
+          )}`,
         );
 
         if (!response.ok) {
@@ -322,7 +327,7 @@ export default function Home() {
 
         // IMPORTADO local search (using cached data)
         const response = await fetch(
-          `/api/importado/pieza?codigoCompleto=${encodeURIComponent(nroSerie)}`
+          `/api/importado/pieza?codigoCompleto=${encodeURIComponent(nroSerie)}`,
         );
 
         if (!response.ok) {
@@ -368,7 +373,7 @@ export default function Home() {
           const result = await response.json();
           console.log(`IMPORTADO data loaded: ${result.count} pieces`);
           console.log(
-            `EJEMPLO DE NUMERO DE PIEZA: ${result.data[41].NumeroPieza}`
+            `EJEMPLO DE NUMERO DE PIEZA: ${result.data[41].NumeroPieza}`,
           );
           setImportadoDataLoaded(true);
         } else {
@@ -387,7 +392,7 @@ export default function Home() {
   const handleDeletePiece = (clientId: string) => {
     console.log("Delete piece:", clientId);
     setPieces((prevPieces) =>
-      prevPieces.filter((piece) => piece.clientId !== clientId)
+      prevPieces.filter((piece) => piece.clientId !== clientId),
     );
   };
 
@@ -436,12 +441,12 @@ export default function Home() {
       setSaveMessage(
         `Se guardaron ${result.count} pieza${
           result.count === 1 ? "" : "s"
-        } correctamente.`
+        } correctamente.`,
       );
     } catch (err) {
       console.error("Save pieces error:", err);
       setSaveError(
-        err instanceof Error ? err.message : "Error al guardar las piezas"
+        err instanceof Error ? err.message : "Error al guardar las piezas",
       );
     } finally {
       setSavingPieces(false);
@@ -473,8 +478,8 @@ export default function Home() {
                   activeTab === "CLADD"
                     ? "Buscar pieza CLADD (presione Enter)"
                     : importadoLoading
-                    ? "Cargando datos IMPORTADO..."
-                    : "Buscar pieza IMPORTADO (presione Enter)"
+                      ? "Cargando datos IMPORTADO..."
+                      : "Buscar pieza IMPORTADO (presione Enter)"
                 }
               />
             </div>
