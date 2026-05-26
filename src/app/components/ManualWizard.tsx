@@ -237,6 +237,7 @@ export default function ManualWizard({ onAddPiece }: ManualWizardProps) {
             inputMode="decimal"
             value={peso}
             onChange={(e) => setPeso(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAgregar(); }}
             placeholder="ej: 12.50"
             autoFocus
             className="w-full rounded-xl border-2 border-gray-300 px-4 py-4 text-center font-mono text-2xl focus:border-[#C19E5A] focus:outline-none"
