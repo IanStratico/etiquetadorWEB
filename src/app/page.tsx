@@ -5,15 +5,7 @@ import Header from "./components/Header";
 import NavigationTabs from "./components/NavigationTabs";
 import SearchBar from "./components/SearchBar";
 import PieceCard from "./components/PieceCard";
-
-interface ArticuloDto {
-  codigo: string;
-  descripcion: string;
-  descAdicional: string | null;
-  codBase: string;
-  nombreBase: string;
-  idColorWeb: string | null;
-}
+import ManualWizard from "./components/ManualWizard";
 
 interface PieceData {
   clientId: string;
@@ -71,13 +63,6 @@ export default function Home() {
   const [lotDownloadLoading, setLotDownloadLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [manualTipos, setManualTipos] = useState<string[]>([]);
-  const [manualSelectedTipo, setManualSelectedTipo] = useState<string | null>(null);
-  const [manualArticulos, setManualArticulos] = useState<ArticuloDto[]>([]);
-  const [manualArticulosLoading, setManualArticulosLoading] = useState(false);
-  const [manualSearch, setManualSearch] = useState("");
-  const [manualSelectedArticulo, setManualSelectedArticulo] = useState<ArticuloDto | null>(null);
-  const [manualMedida, setManualMedida] = useState("");
 
   const createClientId = () =>
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -408,47 +393,6 @@ export default function Home() {
     loadImportadoData();
   }, []);
 
-  useEffect(() => {
-    fetch("/api/lnt/grupos")
-      .then((r) => r.json())
-      .then((data: { tipos?: string[] }[]) => {
-        if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0].tipos)) {
-          setManualTipos(data[0].tipos);
-        }
-      })
-      .catch((err) => console.error("Error loading lnt grupos:", err));
-  }, []);
-
-  useEffect(() => {
-    if (!manualSelectedTipo) return;
-    setManualArticulosLoading(true);
-    setManualSelectedArticulo(null);
-    setManualSearch("");
-    fetch(`/api/lnt/articulos?tipo=${encodeURIComponent(manualSelectedTipo)}&limit=500`)
-      .then((r) => r.json())
-      .then((data: { items: ArticuloDto[] }) => setManualArticulos(data.items))
-      .catch((err) => console.error("Error loading lnt articulos:", err))
-      .finally(() => setManualArticulosLoading(false));
-  }, [manualSelectedTipo]);
-
-  const handleAgregarManual = () => {
-    if (!manualSelectedArticulo || !manualMedida.trim()) return;
-    const piece: PieceData = {
-      clientId: createClientId(),
-      id: createClientId(),
-      article: manualSelectedArticulo.nombreBase,
-      codArticulo: manualSelectedArticulo.codigo,
-      color: manualSelectedArticulo.descAdicional ?? "",
-      measure: manualMedida.trim(),
-      idColorWeb: manualSelectedArticulo.idColorWeb ?? "",
-      source: "MANUAL",
-      originalData: manualSelectedArticulo,
-    };
-    setPieces((prev) => [...prev, piece]);
-    setManualSelectedArticulo(null);
-    setManualMedida("");
-    setManualSearch("");
-  };
 
   const handleDeletePiece = (clientId: string) => {
     console.log("Delete piece:", clientId);
@@ -512,9 +456,6 @@ export default function Home() {
     } finally {
       setSavingPieces(false);
       setPieces([]);
-      setManualSelectedArticulo(null);
-      setManualMedida("");
-      setManualSearch("");
     }
   };
 
@@ -564,87 +505,9 @@ export default function Home() {
           <div className="mx-auto w-full max-w-md px-4 py-6">
             <NavigationTabs activeTab={activeTab} onTabChange={setActiveTab} />
             {activeTab === "MANUAL" ? (
-              <div className="mt-4 space-y-3">
-                <div className="flex gap-2 flex-wrap">
-                  {manualTipos.map((tipo) => (
-                    <button
-                      key={tipo}
-                      onClick={() => setManualSelectedTipo(tipo)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                        manualSelectedTipo === tipo
-                          ? "bg-[#1A2753] text-white"
-                          : "border border-[#1A2753] text-[#1A2753] hover:bg-[#1A2753] hover:text-white"
-                      }`}
-                    >
-                      {tipo}
-                    </button>
-                  ))}
-                </div>
-
-                {manualSelectedTipo && (
-                  <>
-                    <input
-                      type="text"
-                      value={manualSearch}
-                      onChange={(e) => setManualSearch(e.target.value)}
-                      placeholder="Buscar artículo..."
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#C19E5A] focus:outline-none focus:ring-1 focus:ring-[#C19E5A]"
-                    />
-
-                    {manualArticulosLoading ? (
-                      <div className="text-center text-sm text-[#4A4A4A]">Cargando artículos...</div>
-                    ) : (
-                      <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
-                        {manualArticulos
-                          .filter((a) =>
-                            a.descripcion.toLowerCase().includes(manualSearch.toLowerCase())
-                          )
-                          .map((a) => (
-                            <button
-                              key={a.codigo}
-                              onClick={() => setManualSelectedArticulo(a)}
-                              className={`w-full flex justify-between items-center px-3 py-2 text-sm text-left transition-colors ${
-                                manualSelectedArticulo?.codigo === a.codigo
-                                  ? "bg-[#1A2753] text-white"
-                                  : "hover:bg-gray-50 text-[#4A4A4A]"
-                              }`}
-                            >
-                              <span>{a.descripcion}</span>
-                              <span className="ml-2 shrink-0 font-mono text-xs opacity-60">{a.codigo}</span>
-                            </button>
-                          ))}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {manualSelectedArticulo && (
-                  <div className="rounded-lg border border-[#C19E5A] bg-[#FFFBF2] px-3 py-2 text-sm text-[#1A2753]">
-                    Seleccionado: {manualSelectedArticulo.descripcion} ({manualSelectedArticulo.codigo})
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={manualMedida}
-                    onChange={(e) => setManualMedida(e.target.value)}
-                    placeholder="Medida / Peso"
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#C19E5A] focus:outline-none focus:ring-1 focus:ring-[#C19E5A]"
-                  />
-                  <button
-                    onClick={handleAgregarManual}
-                    disabled={!manualSelectedArticulo || !manualMedida.trim()}
-                    className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
-                      !manualSelectedArticulo || !manualMedida.trim()
-                        ? "bg-gray-300"
-                        : "bg-[#1A2753] hover:bg-[#C19E5A]"
-                    }`}
-                  >
-                    Agregar
-                  </button>
-                </div>
-              </div>
+              <ManualWizard
+                onAddPiece={(piece) => setPieces((prev) => [...prev, piece])}
+              />
             ) : (
               <>
                 <div className="mt-4">
