@@ -72,7 +72,7 @@ export default function PieceCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="text-[#1A2753] hover:text-red-600 transition-colors"
+          className="p-2 -m-2 text-[#1A2753] hover:text-red-600 transition-colors"
           disabled={isDisabled}
           title="Eliminar pieza"
         >

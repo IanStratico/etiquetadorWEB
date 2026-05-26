@@ -19,7 +19,7 @@ export default function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         onKeyPress={onKeyPress}
         placeholder={placeholder}
-        className="w-full px-4 py-3 bg-white border border-[#E4E7EB] rounded-md text-[#4A4A4A] placeholder-[#B0B0B0] focus:outline-none focus:border-[#1A2753] focus:ring-1 focus:ring-[#1A2753] transition-colors shadow-sm"
+        className="w-full min-h-[48px] px-4 py-3 bg-white border border-[#E4E7EB] rounded-md text-base text-[#4A4A4A] placeholder-[#B0B0B0] focus:outline-none focus:border-[#1A2753] focus:ring-1 focus:ring-[#1A2753] transition-colors shadow-sm"
         style={{
           boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
         }}

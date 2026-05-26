@@ -554,7 +554,7 @@ export default function Home() {
             )}
 
             <div className="mt-4">
-              <div className="max-h-[420px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <div className="max-h-[50vh] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 {pieces
                   .slice()
                   .reverse()
@@ -594,7 +594,7 @@ export default function Home() {
                 <button
                   onClick={handleSavePieces}
                   disabled={savingPieces}
-                  className={`w-full max-w-xs rounded-lg bg-[#1A2753] px-4 py-2 text-white transition-colors ${
+                  className={`w-full max-w-xs min-h-[48px] rounded-lg bg-[#1A2753] px-4 py-2 text-white transition-colors ${
                     savingPieces ? "opacity-70" : "hover:bg-[#C19E5A]"
                   }`}
                 >
