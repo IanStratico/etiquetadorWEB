@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { BrowserMultiFormatReader, IScannerControls } from "@zxing/browser";
+import { useEffect, useState } from "react";
+import { Html5Qrcode } from "html5-qrcode";
+
+const CONTAINER_ID = "camera-scanner-feed";
 
 interface CameraScannerProps {
   isOpen: boolean;
@@ -10,60 +12,46 @@ interface CameraScannerProps {
 }
 
 export default function CameraScanner({ isOpen, onScan, onClose }: CameraScannerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsRef = useRef<IScannerControls | null>(null);
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [scanError, setScanError] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
-  const activeRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
 
-    const videoEl = videoRef.current;
-    if (!videoEl) return;
-
+    let cancelled = false;
     setScanError(null);
     setCameraReady(false);
-    activeRef.current = true;
 
-    const reader = new BrowserMultiFormatReader();
+    const scanner = new Html5Qrcode(CONTAINER_ID);
 
-    reader
-      .decodeFromConstraints(
-        { video: { facingMode } },
-        videoEl,
-        async (result, err) => {
-          if (!activeRef.current) return;
-          if (result) {
-            const success = await onScan(result.getText());
-            if (success) {
-              onClose();
-            } else {
-              setScanError("Pieza no encontrada. Intentá de nuevo.");
-            }
-          } else if (err && !err.message?.includes("No MultiFormat")) {
-            // ignore continuous decode-loop "not found" errors
+    scanner
+      .start(
+        { facingMode },
+        { fps: 10 },
+        async (decodedText) => {
+          if (cancelled) return;
+          const success = await onScan(decodedText);
+          if (success) {
+            onClose();
+          } else {
+            setScanError("Pieza no encontrada. Intentá de nuevo.");
           }
         },
+        () => { /* error por frame — ignorar */ },
       )
-      .then((controls) => {
-        if (!activeRef.current) {
-          controls.stop();
-          return;
-        }
-        controlsRef.current = controls;
-        setCameraReady(true);
+      .then(() => {
+        if (!cancelled) setCameraReady(true);
       })
       .catch(() => {
-        setScanError("No se pudo acceder a la cámara. Verificá los permisos.");
+        if (!cancelled) setScanError("No se pudo acceder a la cámara. Verificá los permisos.");
       });
 
     return () => {
-      activeRef.current = false;
-      controlsRef.current?.stop();
-      controlsRef.current = null;
-      if (videoEl) videoEl.srcObject = null;
+      cancelled = true;
+      if (scanner.isScanning) {
+        scanner.stop().catch(() => {});
+      }
       setCameraReady(false);
     };
   }, [isOpen, facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -78,20 +66,19 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
       <div className="relative flex-1 overflow-hidden">
-        <video
-          ref={videoRef}
-          muted
-          playsInline
-          className="h-full w-full object-cover"
+        {/* html5-qrcode renderiza el video dentro de este div */}
+        <div
+          id={CONTAINER_ID}
+          className="h-full w-full [&>*]:!h-full [&>*]:!w-full [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover"
         />
 
-        {/* Scan area frame */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
+        {/* Recuadro guía de escaneo */}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <div className="relative h-56 w-4/5 max-w-xs">
-            <span className="absolute left-0 top-0 h-8 w-8 border-l-4 border-t-4 border-white rounded-tl-sm" />
-            <span className="absolute right-0 top-0 h-8 w-8 border-r-4 border-t-4 border-white rounded-tr-sm" />
-            <span className="absolute bottom-0 left-0 h-8 w-8 border-b-4 border-l-4 border-white rounded-bl-sm" />
-            <span className="absolute bottom-0 right-0 h-8 w-8 border-b-4 border-r-4 border-white rounded-br-sm" />
+            <span className="absolute left-0 top-0 h-8 w-8 rounded-tl-sm border-l-4 border-t-4 border-white" />
+            <span className="absolute right-0 top-0 h-8 w-8 rounded-tr-sm border-r-4 border-t-4 border-white" />
+            <span className="absolute bottom-0 left-0 h-8 w-8 rounded-bl-sm border-b-4 border-l-4 border-white" />
+            <span className="absolute bottom-0 right-0 h-8 w-8 rounded-br-sm border-b-4 border-r-4 border-white" />
           </div>
           {!cameraReady && !scanError && (
             <p className="mt-4 text-sm text-white/80">Iniciando cámara...</p>
@@ -101,7 +88,7 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
           )}
         </div>
 
-        {/* Top controls */}
+        {/* Controles superiores */}
         <div className="absolute left-0 right-0 top-0 flex items-center justify-between px-4 pt-4">
           <button
             onClick={handleFlip}
@@ -127,7 +114,7 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
         </div>
       </div>
 
-      {/* Error zone */}
+      {/* Zona de error */}
       {scanError && (
         <div className="bg-black px-4 py-3 text-center text-sm text-red-400">
           {scanError}
