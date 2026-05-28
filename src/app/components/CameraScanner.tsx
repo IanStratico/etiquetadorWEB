@@ -30,6 +30,7 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_93,
       ],
+      useBarCodeDetectorIfSupported: true,
       verbose: false,
     });
 
