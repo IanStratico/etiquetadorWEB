@@ -273,10 +273,10 @@ export default function Home() {
       timeStyle: "short",
     });
 
-  const searchPiece = async (nroSerie: string) => {
+  const searchPiece = async (nroSerie: string): Promise<boolean> => {
     if (!nroSerie.trim()) {
       setError("Por favor ingrese un número de serie");
-      return;
+      return false;
     }
 
     if (activeTab === "CLADD") {
@@ -288,7 +288,7 @@ export default function Home() {
       );
       if (existingPiece) {
         setError("Esta pieza ya está en la lista");
-        return;
+        return false;
       }
     }
 
@@ -311,25 +311,23 @@ export default function Home() {
           } else {
             setError("Error al buscar la pieza");
           }
-          return;
+          return false;
         }
 
         const data: FetchedPieceData = await response.json();
-        // Add to the existing list instead of replacing
         setPieces((prevPieces) => [
           ...prevPieces,
           { ...data, clientId: createClientId() },
         ]);
         console.log(data);
-        setSearchTerm(""); // Clear search input after successful search
+        setSearchTerm("");
+        return true;
       } else {
-        // Check if IMPORTADO data is loaded
         if (!importadoDataLoaded) {
           setError("Cargando datos IMPORTADO, por favor espere...");
-          return;
+          return false;
         }
 
-        // IMPORTADO local search (using cached data)
         const response = await fetch(
           `/api/importado/pieza?codigoCompleto=${encodeURIComponent(nroSerie)}`,
         );
@@ -340,20 +338,21 @@ export default function Home() {
           } else {
             setError("Error al buscar la pieza");
           }
-          return;
+          return false;
         }
 
         const data: FetchedPieceData = await response.json();
-        // Add to the existing list instead of replacing
         setPieces((prevPieces) => [
           ...prevPieces,
           { ...data, clientId: createClientId() },
         ]);
-        setSearchTerm(""); // Clear search input after successful search
+        setSearchTerm("");
+        return true;
       }
     } catch (err) {
       console.error("Search error:", err);
       setError("Error de conexión");
+      return false;
     } finally {
       setLoading(false);
       console.log(pieces);
@@ -362,7 +361,7 @@ export default function Home() {
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
-      searchPiece(searchTerm);
+      void searchPiece(searchTerm);
     }
   };
 
