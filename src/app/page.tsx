@@ -6,6 +6,7 @@ import NavigationTabs from "./components/NavigationTabs";
 import SearchBar from "./components/SearchBar";
 import PieceCard from "./components/PieceCard";
 import ManualWizard from "./components/ManualWizard";
+import CameraScanner from "./components/CameraScanner";
 
 interface PieceData {
   clientId: string;
@@ -62,6 +63,7 @@ export default function Home() {
   const [selectedLotError, setSelectedLotError] = useState<string | null>(null);
   const [lotDownloadLoading, setLotDownloadLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
 
   const createClientId = () =>
@@ -521,6 +523,7 @@ export default function Home() {
                           ? "Cargando datos IMPORTADO..."
                           : "Buscar pieza IMPORTADO (presione Enter)"
                     }
+                    onCameraClick={() => setIsScannerOpen(true)}
                   />
                 </div>
 
@@ -796,6 +799,12 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <CameraScanner
+        isOpen={isScannerOpen && activeTab !== "MANUAL"}
+        onScan={searchPiece}
+        onClose={() => setIsScannerOpen(false)}
+      />
     </div>
   );
 }

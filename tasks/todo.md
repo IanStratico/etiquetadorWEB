@@ -1,4 +1,4 @@
-# Tasks — MANUAL Wizard + Mobile-first
+# Tasks — MANUAL Wizard + Mobile-first + Scanner de cámara
 
 Ref: tasks/plan.md · SPEC.md
 
@@ -6,11 +6,19 @@ Ref: tasks/plan.md · SPEC.md
 
 - [ ] CHECKPOINT B — Test E2E completo (CLADD + IMPORTADO + MANUAL + sidebar mobile)
 
+### Scanner de cámara (QR + código de barras)
+
+- [ ] CHECKPOINT C — Prueba funcional del scanner en browser/celular
+
 ## En progreso
 
 ninguna
 
 ## Completado
+
+- [x] T8 — Instalar `@zxing/browser` + `searchPiece` retorna `Promise<boolean>` (`src/app/page.tsx`)
+- [x] T9 — Crear `CameraScanner.tsx` (`src/app/components/CameraScanner.tsx`)
+- [x] T10 — Integrar scanner: botón en `SearchBar.tsx` + wiring en `page.tsx`
 
 - [x] T1 — Sidebar colapsable en mobile (`src/app/page.tsx`)
 - [x] T2 — ManualWizard: Pasos 1 y 2 — Grupo + Tipo (nuevo `src/app/components/ManualWizard.tsx`)
