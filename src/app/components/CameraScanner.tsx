@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 const CONTAINER_ID = "camera-scanner-feed";
 
@@ -20,22 +20,39 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
     if (!isOpen) return;
 
     let cancelled = false;
+    let processing = false;
     setScanError(null);
     setCameraReady(false);
 
-    const scanner = new Html5Qrcode(CONTAINER_ID);
+    const scanner = new Html5Qrcode(CONTAINER_ID, {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_93,
+      ],
+      verbose: false,
+    });
 
     scanner
       .start(
         { facingMode },
-        { fps: 10 },
+        {
+          fps: 15,
+          videoConstraints: {
+            facingMode,
+            width: { min: 640, ideal: 1280 },
+            height: { min: 480, ideal: 720 },
+          },
+        },
         async (decodedText) => {
-          if (cancelled) return;
+          if (cancelled || processing) return;
+          processing = true;
           const success = await onScan(decodedText);
           if (success) {
             onClose();
           } else {
             setScanError("Pieza no encontrada. Intentá de nuevo.");
+            processing = false;
           }
         },
         () => { /* error por frame — ignorar */ },
