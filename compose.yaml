@@ -5,6 +5,7 @@
 services:
   server:
     image: ianstratico22/etiquetadorweb:latest
+    env_file: .env
     environment:
       NODE_ENV: production
       LNT_API_URL: http://192.168.1.119:3000
