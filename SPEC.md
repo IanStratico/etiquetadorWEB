@@ -79,7 +79,82 @@ Permitir que un operador etiquete rollos de tela que no tienen etiqueta interna 
 
 ---
 
-## 6. Límites
+## 6. Scanner de cámara (QR y código de barras)
+
+### Objetivo
+
+Permitir al operador escanear piezas con la cámara del celular en las solapas CLADD e IMPORTADO, replicando el comportamiento del lector bluetooth ya existente: detectar el código → ejecutar la misma búsqueda que dispara el Enter.
+
+---
+
+### Librería
+
+`@zxing/browser` — detecta automáticamente QR (IMPORTADO), Code128 y Code93 (CLADD) sin configuración por tab.
+
+---
+
+### UX
+
+```
+[ SearchBar input                    ] [📷] [↩]
+```
+
+- Botón de cámara (ícono) al lado derecho del input en `SearchBar`
+- Al clickear: abre overlay fullscreen con el feed de cámara
+- Overlay contiene:
+  - Feed de cámara a pantalla completa (fondo)
+  - Recuadro/marco centrado indicando el área de escaneo
+  - Texto de guía: "Apuntá el código al recuadro"
+  - Botón para cambiar entre cámara trasera y frontal (ícono flip)
+  - Botón cerrar (X) esquina superior derecha
+  - Zona de error en la parte inferior (visible solo cuando hay error)
+- Cámara activa por defecto: trasera (`environment` facing mode)
+- Al detectar un código: ejecuta la búsqueda
+  - Búsqueda exitosa → cierra scanner automáticamente
+  - Búsqueda fallida (404 o error) → muestra mensaje de error en el overlay, scanner permanece abierto para reintentar
+
+---
+
+### Arquitectura
+
+**Nuevo componente:** `src/app/components/CameraScanner.tsx`
+
+```ts
+interface CameraScannerProps {
+  isOpen: boolean;
+  onScan: (value: string) => Promise<boolean>; // true = pieza encontrada, false = no encontrada/error
+  onClose: () => void;
+}
+```
+
+**`SearchBar.tsx` — cambios:**
+- Nueva prop: `onCameraClick: () => void`
+- Agrega botón de cámara al lado derecho del input
+
+**`page.tsx` — cambios:**
+- Nuevo estado: `const [isScannerOpen, setIsScannerOpen] = useState(false)`
+- `searchPiece` se modifica para retornar `Promise<boolean>` (true si encontró la pieza, false si no)
+- Pasa `onCameraClick={() => setIsScannerOpen(true)}` a `SearchBar`
+- Renderiza `<CameraScanner isOpen={isScannerOpen} onScan={searchPiece} onClose={() => setIsScannerOpen(false)} />`
+- El scanner solo aparece en las solapas CLADD e IMPORTADO (no en MANUAL)
+
+---
+
+### Criterios de aceptación
+
+- El botón de cámara aparece en el SearchBar de las solapas CLADD e IMPORTADO
+- Al tocar el botón se abre el overlay fullscreen con el feed de cámara
+- Se puede cambiar entre cámara trasera y frontal
+- Al enfocar un QR o código de barras válido, ejecuta la búsqueda automáticamente
+- Si la pieza existe: el overlay se cierra y la pieza aparece en la lista
+- Si la pieza no existe: aparece el error dentro del overlay y el scanner sigue abierto
+- El operador puede cerrar el scanner manualmente en cualquier momento
+- El proyecto compila sin errores TypeScript
+- El scanner no interfiere con la lógica existente de CLADD, IMPORTADO ni MANUAL
+
+---
+
+## 7. Límites
 
 **Nunca tocar:**
 - Lógica de CLADD e IMPORTADO (fetch, procesamiento de datos)

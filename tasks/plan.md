@@ -252,9 +252,139 @@ Verificar:
 
 ---
 
-## Lo que NO se toca en ninguna tarea
+## Lo que NO se toca en ninguna tarea (MANUAL / mobile)
 
 - Lógica de fetch y procesamiento de CLADD e IMPORTADO
 - `POST /api/pieces` — sin cambios
 - Entidades TypeORM — `PieceSource` ya tiene `"MANUAL"`, no tocar más
 - Colores, tipografía y estilo visual de la app
+
+---
+
+---
+
+# Plan — Scanner de cámara (QR + código de barras)
+
+Ref: SPEC.md § 6
+
+## Contexto
+
+Las solapas CLADD e IMPORTADO tienen un `SearchBar` con input de texto. El lector bluetooth ya funciona porque popula el input y simula Enter → `searchPiece()`. El scanner de cámara replica ese comportamiento: detecta el código y llama `searchPiece(valor)`.
+
+`searchPiece` actualmente no retorna nada (`void`). Para que el scanner pueda saber si cerrar el overlay o mostrar error, necesita retornar `Promise<boolean>` (true = encontrada, false = no encontrada o error).
+
+---
+
+## Grafo de dependencias
+
+```
+T8 (instalar lib + searchPiece → bool)
+        │
+        ├──→ T9  (CameraScanner.tsx)
+        │
+        └──→ T10 (SearchBar.tsx + page.tsx wiring)
+                  └── depende de T9
+```
+
+---
+
+## TAREA 8 — Instalar `@zxing/browser` y modificar `searchPiece`
+
+**Archivos:** `package.json` (via npm), `src/app/page.tsx`
+
+**Cambios:**
+1. `npm install @zxing/browser`
+2. Cambiar firma de `searchPiece` a `async (nroSerie: string): Promise<boolean>`
+3. Retornar `true` cuando la pieza se encuentra y se agrega a la lista
+4. Retornar `false` en todos los casos de error (404, error de red, pieza duplicada)
+5. La lógica interna no cambia — solo se agregan los `return`
+
+**Criterio de aceptación:** `npm run build` sin errores TypeScript. `searchPiece` retorna bool en todos los paths.
+
+---
+
+## TAREA 9 — Crear `CameraScanner.tsx`
+
+**Archivo nuevo:** `src/app/components/CameraScanner.tsx`
+
+**Props:**
+```ts
+interface CameraScannerProps {
+  isOpen: boolean;
+  onScan: (value: string) => Promise<boolean>;
+  onClose: () => void;
+}
+```
+
+**Comportamiento:**
+- `isOpen` → true: inicializar `BrowserMultiFormatReader`, pedir cámara, iniciar decode loop
+- `isOpen` → false: `reader.reset()`, liberar cámara
+- Al detectar código: llamar `onScan(result.getText())`
+  - Retorna `true` → llamar `onClose()`
+  - Retorna `false` → mostrar error en overlay, continuar escaneando
+- Botón flip: alternar `environment` ↔ `user` facing mode, reiniciar reader
+- Botón X: llamar `onClose()`
+- Estado de carga: texto "Iniciando cámara..." mientras no hay video
+
+**Layout del overlay:**
+```
+┌─────────────────────────────┐  fixed inset-0 z-50 bg-black
+│  [🔄]               [✕]    │  flex flex-col
+│                             │
+│  ┌───────────────────────┐  │  <video> object-cover w-full flex-1
+│  │                       │  │
+│  │    [ recuadro ]       │  │  recuadro: absolute centrado ~60% ancho
+│  │                       │  │  borde: 2px solid white/gold
+│  └───────────────────────┘  │
+│  Apuntá el código al marco  │  texto guía, text-white text-sm
+│                             │
+│  [mensaje error si hay]     │  text-red-400 text-sm
+└─────────────────────────────┘
+```
+
+**Criterio de aceptación:** `npm run build` sin errores. Overlay renderiza sin crashes cuando `isOpen=false`.
+
+---
+
+## TAREA 10 — Integrar scanner en `SearchBar.tsx` y `page.tsx`
+
+**Archivos:** `src/app/components/SearchBar.tsx`, `src/app/page.tsx`
+
+**`SearchBar.tsx`:**
+- Nueva prop opcional: `onCameraClick?: () => void`
+- Si está definido: agregar botón con ícono de cámara (SVG) al lado derecho del input
+- Ajustar padding-right del input para que no quede tapado por el botón
+- Botón: `min-h-[48px]`, color `[#1A2753]`
+
+**`page.tsx`:**
+- Nuevo estado: `const [isScannerOpen, setIsScannerOpen] = useState(false)`
+- Pasar `onCameraClick={() => setIsScannerOpen(true)}` a `SearchBar` (solo cuando `activeTab !== "MANUAL"`)
+- Renderizar `<CameraScanner>` con:
+  - `isOpen={isScannerOpen && activeTab !== "MANUAL"}`
+  - `onScan={searchPiece}`
+  - `onClose={() => setIsScannerOpen(false)}`
+
+**Criterio de aceptación:** `npm run build` sin errores TypeScript. El botón no aparece en la tab MANUAL.
+
+---
+
+## CHECKPOINT — Prueba funcional
+
+- Botón de cámara visible en CLADD e IMPORTADO, no en MANUAL
+- Overlay abre con feed de cámara activo
+- Cambio de cámara frontal/trasera funciona
+- Escaneo exitoso: pieza en lista + overlay cierra
+- Escaneo fallido: error en overlay + scanner sigue abierto
+- Botón X cierra el overlay en cualquier momento
+- Lector bluetooth sigue funcionando (no hay regresión)
+- `npm run build` limpio
+
+---
+
+## Lo que NO se toca (scanner)
+
+- Lógica de fetch de CLADD e IMPORTADO (solo se agrega `return` al resultado)
+- `ManualWizard.tsx`
+- `POST /api/pieces`
+- Entidades TypeORM
+- Estilo visual base

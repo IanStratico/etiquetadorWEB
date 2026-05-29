@@ -1,6 +1,6 @@
 interface NavigationTabsProps {
-  activeTab: 'CLADD' | 'IMPORTADO';
-  onTabChange: (tab: 'CLADD' | 'IMPORTADO') => void;
+  activeTab: 'CLADD' | 'IMPORTADO' | 'MANUAL';
+  onTabChange: (tab: 'CLADD' | 'IMPORTADO' | 'MANUAL') => void;
 }
 
 export default function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) {
@@ -30,6 +30,19 @@ export default function NavigationTabs({ activeTab, onTabChange }: NavigationTab
         >
           IMPORTADO
           {activeTab === 'IMPORTADO' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C19E5A]"></div>
+          )}
+        </button>
+        <button
+          onClick={() => onTabChange('MANUAL')}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === 'MANUAL'
+              ? 'text-[#1A2753]'
+              : 'text-[#4A4A4A] hover:text-[#1A2753]'
+          }`}
+        >
+          MANUAL
+          {activeTab === 'MANUAL' && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#C19E5A]"></div>
           )}
         </button>

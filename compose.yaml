@@ -8,6 +8,8 @@ services:
       context: .
     environment:
       NODE_ENV: production
+      LNT_API_URL: http://192.168.1.119:3000
+      LNT_API_SYNC_KEY: pon-un-secreto-largo-y-raro
     ports:
       - 3040:3040
 

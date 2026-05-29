@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import { Lot } from "@/lib/entities/Lot";
 
-export type PieceSource = "CLADD" | "IMPORTADO";
+export type PieceSource = "CLADD" | "IMPORTADO" | "MANUAL";
 
 @Entity({ name: "pieces" })
 export class Piece {

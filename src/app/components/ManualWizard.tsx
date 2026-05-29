@@ -93,7 +93,9 @@ export default function ManualWizard({ onAddPiece }: ManualWizardProps) {
       .finally(() => setArticulosLoading(false));
   }, [selectedTipo]);
 
-  const articulosBase = articulos.filter((a) => !a.descAdicional);
+  const articulosBase = Array.from(
+    new Map(articulos.map((a) => [a.nombreBase, a])).values()
+  );
 
   const hasColores = (base: ArticuloDto) =>
     articulos.some((a) => a.codBase === base.codBase && !!a.descAdicional);
@@ -190,7 +192,7 @@ export default function ManualWizard({ onAddPiece }: ManualWizardProps) {
                 const disponible = hasColores(a);
                 return (
                   <button
-                    key={a.codigo}
+                    key={a.nombreBase}
                     disabled={!disponible}
                     onClick={() => { setSelectedBase(a); setStep(4); }}
                     className={`min-h-[56px] rounded-xl border-2 px-3 py-3 text-left text-sm transition-colors ${

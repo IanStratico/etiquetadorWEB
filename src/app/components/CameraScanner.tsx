@@ -15,6 +15,7 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [scanError, setScanError] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -23,12 +24,14 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
     let processing = false;
     setScanError(null);
     setCameraReady(false);
+    setIsProcessing(false);
 
     const scanner = new Html5Qrcode(CONTAINER_ID, {
       formatsToSupport: [
         Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.CODE_39,
       ],
       useBarCodeDetectorIfSupported: true,
       verbose: false,
@@ -48,12 +51,14 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
         async (decodedText) => {
           if (cancelled || processing) return;
           processing = true;
+          setIsProcessing(true);
           const success = await onScan(decodedText);
           if (success) {
             onClose();
           } else {
             setScanError("Pieza no encontrada. Intentá de nuevo.");
             processing = false;
+            setIsProcessing(false);
           }
         },
         () => { /* error por frame — ignorar */ },
@@ -89,6 +94,14 @@ export default function CameraScanner({ isOpen, onScan, onClose }: CameraScanner
           id={CONTAINER_ID}
           className="h-full w-full [&>*]:!h-full [&>*]:!w-full [&_video]:!h-full [&_video]:!w-full [&_video]:!object-cover"
         />
+
+        {/* Overlay de procesamiento */}
+        {isProcessing && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+            <p className="mt-4 text-sm font-medium text-white">Procesando...</p>
+          </div>
+        )}
 
         {/* Recuadro guía de escaneo */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
