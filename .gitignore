@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# certs generados por mkcert (nunca commitear)
+/certs/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
